@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create VPC, subnets, sg, efs
+
+Resources:
+  MountTargetSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: sandy-sg-jfrog
+      GroupName: sandy-sg-jfrog
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+      VpcId: !Ref MountTargetVPC
+
+  MountTargetVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsHostnames: True
+      EnableDnsSupport: True
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+
+  MountTargetSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.1.0/24
+      VpcId: !Ref MountTargetVPC
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+
+  MountTargetSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.2.0/24
+      VpcId: !Ref MountTargetVPC
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+
+  MountTargetSubnetThree:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 172.31.3.0/24
+      VpcId: !Ref MountTargetVPC
+      AvailabilityZone: !Sub "${AWS::Region}c"
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+
+  FileSystemResource:
+    Type: "AWS::EFS::FileSystem"
+    Properties:
+      PerformanceMode: maxIO
+      Encrypted: true
+      FileSystemTags:
+        - Key: Name
+          Value: sandy-efs
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "elasticfilesystem:ClientMount"
+            Principal:
+              AWS: "*"
+
+  MountTargetResource1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !Ref MountTargetSubnetOne
+      SecurityGroups:
+        - !GetAtt MountTargetSG.GroupId
+
+  MountTargetResource2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !Ref MountTargetSubnetTwo
+      SecurityGroups:
+        - !GetAtt MountTargetSG.GroupId
+
+  MountTargetResource3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !Ref MountTargetSubnetThree
+      SecurityGroups:
+        - !GetAtt MountTargetSG.GroupId
+
+  AccessPointResource:
+    Type: "AWS::EFS::AccessPoint"
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      PosixUser:
+        Uid: "1000"
+        Gid: "1000"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "1000"
+          OwnerUid: "1000"
+          Permissions: "0777"
+        Path: "/myefs"

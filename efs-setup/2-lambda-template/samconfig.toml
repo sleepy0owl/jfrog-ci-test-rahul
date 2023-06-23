@@ -1,0 +1,10 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "sandy-efs-setup-part2dot1"
+resolve_s3 = true
+s3_prefix = "sandy-efs-setup-part2dot1"
+region = "ap-south-1"
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+parameter_overrides = "SecurityGroupIds=\"sg-0651d8f4f91c49ee3\" SubnetIDs=\"subnet-0d6f727dcf302d96c,subnet-0cdb608d489c054bb,subnet-09454883ec1f70867\" EFSpath=\"/mnt/efs\" AccessPointARN=\"arn:aws:elasticfilesystem:ap-south-1:960351580303:access-point/fsap-02e34b7865aaef035\""
+image_repositories = ["SandyCustomImage=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart24d4e719f/sandycustomimage1e834329repo"]
