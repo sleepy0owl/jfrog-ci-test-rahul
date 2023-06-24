@@ -20,7 +20,7 @@ Resources:
   SandyCustomImage:
     Type: AWS::Serverless::Function
     Metadata:
-      DockerContext: /Volumes/Code/vscode/JFROG/lambda-efs/aws-lambda-efs-samples/2-lambda-template/custom-image
+      DockerContext: /Users/souravm/Documents/workspace/POC/jfrog-ci-test-rahul/efs-setup/2-lambda-template/custom-image
       DockerTag: sandy-efs-test
       Dockerfile: Dockerfile
       SamResourceId: SandyCustomImage
@@ -53,7 +53,7 @@ Resources:
       CodeUri: HelloWorldFunction
       Timeout: 3
       Handler: app.lambdaHandler
-      Runtime: nodejs18.x
+      Runtime: nodejs16.x
       Events:
         HelloWorld:
           Type: Api
@@ -78,6 +78,36 @@ Resources:
           Resource: '*'
     Metadata:
       SamResourceId: HelloWorldFunction
+  SouravCustomImage:
+    Type: AWS::Serverless::Function
+    Metadata:
+      DockerContext: /Users/souravm/Documents/workspace/POC/jfrog-ci-test-rahul/efs-setup/2-lambda-template/git-artifact
+      DockerTag: git-release-test
+      Dockerfile: Dockerfile
+      SamResourceId: SouravCustomImage
+    Properties:
+      PackageType: Image
+      Architectures:
+      - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds:
+          Ref: SecurityGroupIds
+        SubnetIds:
+          Ref: SubnetIDs
+      FileSystemConfigs:
+      - Arn:
+          Ref: AccessPointARN
+        LocalMountPath:
+          Ref: EFSpath
+      Policies:
+      - Statement:
+        - Sid: Admin
+          Effect: Allow
+          Action: '*'
+          Resource: '*'
+      ImageUri: souravcustomimage:git-release-test
 Outputs:
   HelloWorldApi:
     Description: API Gateway endpoint URL for Prod stage for Hello World function
