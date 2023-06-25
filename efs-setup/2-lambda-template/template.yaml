@@ -75,6 +75,9 @@ Resources:
       DockerContext: ./git-artifact
       DockerTag: git-release-test
     Properties:
+      Environment:
+        Variables:
+          GITHUB_TOKEN: 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
       PackageType: Image
       Architectures:
         - x86_64
