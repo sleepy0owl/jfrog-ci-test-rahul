@@ -1,0 +1,38 @@
+{
+  "Comment": "Lambda CI for serverless app",
+  "StartAt": "lambda 1 - download repo",
+  "States": {
+    "lambda 1 - download repo": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${Lambda1Arn}"
+      },
+      "Next": "lambda 2 - sam build and deploy"
+    },
+    "lambda 2 - sam build and deploy": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${Lambda2Arn}"
+      },
+      "Next": "lamdba 3 - update config files"
+    },
+    "lamdba 3 - update config files": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${Lambda3Arn}"
+      },
+      "Next": "lambda 4 - build and push frontend"
+    },
+    "lambda 4 - build and push frontend": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${Lambda4Arn}"
+      },
+      "End": true
+    }
+  }
+}

@@ -31,6 +31,18 @@ Resources:
       Tags:
         - Key: owner
           Value: sandy-efs
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: owner
+          Value: sandy-efs
+
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref MountTargetVPC
 
   MountTargetSubnetOne:
     Type: AWS::EC2::Subnet

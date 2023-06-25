@@ -30,7 +30,7 @@ Resources:
       Architectures:
         - x86_64
       Timeout: 900
-      MemorySize: 4096
+      MemorySize: 1024
       VpcConfig:
         SecurityGroupIds: !Ref SecurityGroupIds
         SubnetIds: !Ref SubnetIDs
@@ -69,16 +69,157 @@ Resources:
               Action: "*"
               Resource: "*"
 
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  Lambda1:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./lambda-1
+      DockerTag: sandy-lambda-1
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
+  Lambda2:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./lambda-2
+      DockerTag: sandy-lambda-2
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
+  Lambda3:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./lambda-3
+      DockerTag: sandy-lambda-3
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
+  Lambda4:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./lambda-4
+      DockerTag: sandy-lambda-4
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 600
+      MemorySize: 2048
+      EphemeralStorage:
+        Size: 2048
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
+
+  Lambda7:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./lambda-7
+      DockerTag: sandy-lambda-7
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 60
+      MemorySize: 2048
+      EphemeralStorage:
+        Size: 2048
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
+
+  StepFunction1Role:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - states.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  StepFunction1:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: step-function/stpfn.asl.json
+      Role: !GetAtt StepFunction1Role.Arn
+      Tracing:
+        Enabled: true
+      DefinitionSubstitutions:
+        Lambda1Arn: !GetAtt Lambda1.Arn
+        Lambda2Arn: !GetAtt Lambda2.Arn
+        Lambda3Arn: !GetAtt Lambda3.Arn
+        Lambda4Arn: !GetAtt Lambda4.Arn

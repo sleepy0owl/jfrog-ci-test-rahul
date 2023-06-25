@@ -7,4 +7,11 @@ region = "ap-south-1"
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
 parameter_overrides = "SecurityGroupIds=\"sg-0651d8f4f91c49ee3\" SubnetIDs=\"subnet-0d6f727dcf302d96c,subnet-0cdb608d489c054bb,subnet-09454883ec1f70867\" EFSpath=\"/mnt/efs\" AccessPointARN=\"arn:aws:elasticfilesystem:ap-south-1:960351580303:access-point/fsap-02e34b7865aaef035\""
-image_repositories = ["SandyCustomImage=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart24d4e719f/sandycustomimage1e834329repo"]
+image_repositories = [
+    "SandyCustomImage=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart24d4e719f/sandycustomimage1e834329repo", 
+    "Lambda1=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda16ea82c0crepo",
+    "Lambda2=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda2bc5146a5repo",
+    "Lambda3=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda3867c2adcrepo",
+    "Lambda4=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda4da6e8f33repo",
+    "Lambda7=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda78cb9bf1crepo"
+    ]
