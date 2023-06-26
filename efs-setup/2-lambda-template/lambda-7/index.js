@@ -2,22 +2,27 @@ const { execSync } = require("child_process");
 
 exports.handler = async (event) => {
   console.log(
-    execSync("cd /mnt/efs/ACD-Serverless-Leave-Approval/s3-website").toString()
+    execSync("cp -r /mnt/efs/ACD-Serverless-Leave-Approval/s3-website  /tmp/ACD-Serverless-Leave-Approval").toString()
   );
-  console.log(execSync("ls").toString());
+  
   console.log(
     execSync(
-      "npm --cwd /mnt/efs/ACD-Serverless-Leave-Approval/s3-website  install --verbose"
+      "yarn --cwd /tmp/ACD-Serverless-Leave-Approval install"
+      // "npm install --prefix /tmp/ACD-Serverless-Leave-Approval"
     ).toString()
   );
+  
   console.log(
     execSync(
-      "npm  --cwd /mnt/efs/ACD-Serverless-Leave-Approval/s3-website build --verbose"
+      "yarn --cwd /tmp/ACD-Serverless-Leave-Approval build"
+      // "npm install --prefix /tmp/ACD-Serverless-Leave-Approval"
     ).toString()
   );
+  
+  
   console.log(
     execSync(
-      "aws s3 sync /mnt/efs/ACD-Serverless-Leave-Approval/s3-website/build s3://$(jq -r '.S3BucketName' /mnt/efs/ACD-Serverless-Leave-Approval/parameters.json)"
+      "aws s3 sync /tmp/ACD-Serverless-Leave-Approval/build s3://$(jq -r '.S3BucketName' /mnt/efs/ACD-Serverless-Leave-Approval/parameters.json)"
     ).toString()
   );
   const response = {

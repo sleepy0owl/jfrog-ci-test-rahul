@@ -24,6 +24,9 @@ RUN yum clean all && rm -rf /var/cache/yum && rm -rf awscliv2.zip
 #Miscellaneous
 RUN yum install jq -y
 
+#Frontend dependency
+RUN curl --silent --location https://dl.yarnpkg.com/rpm/yarn.repo --output /etc/yum.repos.d/yarn.repo
+RUN yum install yarn -y
 
 
 # This will make sam refer to home directory as /tmp instead of /home
