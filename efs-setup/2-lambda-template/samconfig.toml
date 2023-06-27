@@ -13,5 +13,6 @@ image_repositories = [
     "Lambda2=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda2bc5146a5repo",
     "Lambda3=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda3867c2adcrepo",
     "Lambda4=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda4da6e8f33repo",
-    "Lambda7=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda78cb9bf1crepo"
+    "Lambda7=960351580303.dkr.ecr.ap-south-1.amazonaws.com/sandyefssetuppart2dot1ccd7d470/lambda78cb9bf1crepo",
+    "GitReleaseLambda=960351580303.dkr.ecr.ap-south-1.amazonaws.com/git-release"
     ]
