@@ -2,11 +2,33 @@ import os
 import requests
 import datetime
 import subprocess
-import zipfile
+import boto3
+from botocore.exceptions import ClientError
+
 
 class CustomException(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+def get_github_token() -> str:
+    secret_name = "jfrog/github/token"
+    region_name = "ap-south-1"
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name="secretsmanager",
+        region_name=region_name
+    )
+    try:
+        github_token = client.get_secret_value(
+            SecretId=secret_name
+        )
+        return github_token
+    except ClientError as e:
+        print(e)
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise CustomException('Github token can not be fetched from secrets')
 
 def get_latest_commit_sha(owner: str, repo_name: str, github_token: str) -> str:
     try:
@@ -71,13 +93,6 @@ def check_or_create_tag(owner: str, repo_name: str, github_token) -> bool:
     except Exception as e:
         print(e)
         return False
-
-def create_zip(directory_path, output_zip_path):
-    with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(directory_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                zipf.write(file_path, arcname=os.path.relpath(file_path, directory_path))
 
 def create_release_note(owner: str, repo: str, github_token: str) -> str:
     try:
@@ -188,29 +203,21 @@ def handler(event, context):
         print(event)
         print(context)
         dist_path = event.get("asset_path")
-        # Set the current working directory
-        github_token = os.environ['GITHUB_TOKEN']
-        owner = "sleepy0owl"
-        repository = "ACD-Serverless-Leave-Approval"
+        owner =  event.get("repo_owner")
+        repository = event.get("repo_name")
+        github_token = get_github_token()
         efs_mount = "/mnt/efs/"
-
-        # Mount EFS file system
-        # subprocess.run(["mkdir", "-p", "/mnt/efs"])
-        # subprocess.run(["mount", "-t", "efs", "fs-0de610d45fec9a6de:/", "/mnt/efs"])
 
         # Change to the EFS directory
         os.chdir(efs_mount)
 
-        directory = "ACD-Serverless-Leave-Approval"
-        if os.path.isdir(directory):
+        if os.path.isdir(repository):
             print("Directory exists")
-            os.chdir(directory)
+            os.chdir(repository)
         else:
-            print("Directory does not exist")
-            subprocess.run(["git", "clone", "https://github.com/sleepy0owl/ACD-Serverless-Leave-Approval.git"])
-            os.chdir(directory)
+            raise CustomException(f"Repo {repository} does exist on {efs_mount}")
         subprocess.run(["git", "config", "--global", "user.name", owner])
-        subprocess.run(["git", "config", "--global", "--add", "safe.directory", f"{efs_mount}{directory}"])
+        subprocess.run(["git", "config", "--global", "--add", "safe.directory", f"{efs_mount}{repository}"])
         result = check_or_create_tag(owner, repository, github_token)
 
         if result:
@@ -222,8 +229,6 @@ def handler(event, context):
                 raise CustomException("Failed to make new release")
         else:
             raise CustomException("Failed to create new tag")
-        # Unmount EFS file system
-        # subprocess.run(["umount", "/mnt/efs"])
 
         response = {"statusCode": 200, "body": "Success"}
         return response
