@@ -95,6 +95,33 @@ Resources:
               Effect: Allow
               Action: "*"
               Resource: "*"
+  GitReleaseLambda:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./git-artifact-python
+      DockerTag: git-release-test
+    Properties:
+      Environment:
+          Variables:
+            GITHUB_TOKEN: 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
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
