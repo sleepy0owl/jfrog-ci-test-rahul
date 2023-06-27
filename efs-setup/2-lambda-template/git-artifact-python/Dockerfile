@@ -11,8 +11,6 @@ COPY handler.py ${LAMBDA_TASK_ROOT}
 
 RUN yum install git -y
 
-RUN git config --system http.sslVerify false
-RUN git config --system user.email "sourav.mondal@antstack.io"
 
 ENV HOME=/tmp
 
