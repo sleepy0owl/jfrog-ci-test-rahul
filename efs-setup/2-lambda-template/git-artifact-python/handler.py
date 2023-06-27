@@ -175,21 +175,19 @@ def create_github_release(owner: str, repo_name: str, githu_token: str, dist_pat
         upload_url = response.json().get("upload_url").replace("{?name,label}", "")
         print(f"upload url :: {upload_url}")
         if dist_path is not None:
-            if os.path.isdir(dist_path):
-                os.chdir(dist_path)
-                list_dir = os.listdir(dist_path)
-                print(list_dir)
-                if list_dir:
-                    for name in list_dir:
-                        if not os.path.isdir(name):
-                            # open the file & upload 
-                            # setting the content type as octet-stream but it may vary 
-                            with open(name, 'rb') as file:
-                                response = requests.post(f"{upload_url}?name={name}", data=file, headers={"Authorization": f"Bearer {githu_token}", "Content-Type": "application/octet-stream"})
-                else:
-                    print(f"Directory {dist_path} is empty!")
+            print(os.getcwd())
+            os.chdir(f'/mnt/efs/{repo_name}/{dist_path}')
+            list_dir = os.listdir(f'/mnt/efs/{repo_name}/{dist_path}')
+            print(list_dir)
+            if list_dir:
+                for name in list_dir:
+                    if not os.path.isdir(name):
+                        # open the file & upload 
+                        # setting the content type as octet-stream but it may vary 
+                        with open(name, 'rb') as file:
+                            response = requests.post(f"{upload_url}?name={name}", data=file, headers={"Authorization": f"Bearer {githu_token}", "Content-Type": "application/octet-stream"})
             else:
-                print(f"Path {dist_path} is not a directory!")
+                print(f"Directory {dist_path} is empty!")
         else:
             print("Dist path is None")
 
@@ -206,6 +204,7 @@ def handler(event, context):
         owner =  event.get("repo_owner")
         repository = event.get("repo_name")
         github_token = get_github_token()
+        print(github_token)
         efs_mount = "/mnt/efs/"
 
         # Change to the EFS directory
@@ -216,8 +215,8 @@ def handler(event, context):
             os.chdir(repository)
         else:
             raise CustomException(f"Repo {repository} does exist on {efs_mount}")
-        subprocess.run(["git", "config", "--global", "user.name", owner])
-        subprocess.run(["git", "config", "--global", "--add", "safe.directory", f"{efs_mount}{repository}"])
+        # subprocess.run(["git", "config", "--global", "user.name", owner])
+        # subprocess.run(["git", "config", "--global", "--add", "safe.directory", f"{efs_mount}{repository}"])
         result = check_or_create_tag(owner, repository, github_token)
 
         if result:
@@ -229,6 +228,8 @@ def handler(event, context):
                 raise CustomException("Failed to make new release")
         else:
             raise CustomException("Failed to create new tag")
+        # Unmount EFS file system
+        # subprocess.run(["umount", "/mnt/efs"])
 
         response = {"statusCode": 200, "body": "Success"}
         return response
