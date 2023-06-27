@@ -223,3 +223,31 @@ Resources:
         Lambda2Arn: !GetAtt Lambda2.Arn
         Lambda3Arn: !GetAtt Lambda3.Arn
         Lambda4Arn: !GetAtt Lambda4.Arn
+
+  GitReleaseLambda:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ./git-artifact-python
+      DockerTag: git-release-test
+    Properties:
+      Environment:
+          Variables:
+            GITHUB_TOKEN: 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
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 900
+      MemorySize: 1024
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIDs
+      FileSystemConfigs:
+        - Arn: !Ref AccessPointARN
+          LocalMountPath: !Ref EFSpath
+      Policies:
+        - Statement:
+            - Sid: Admin
+              Effect: Allow
+              Action: "*"
+              Resource: "*"
