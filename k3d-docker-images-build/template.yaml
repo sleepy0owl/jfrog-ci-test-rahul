@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  MyCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: k3dDcokerIMagesBuild
+      ServiceRole: !Ref CodeBuildServiceRole
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: false
+      TimeoutInMinutes: 60
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                golang: 1.20
+              commands:
+                - apt update -y
+                - apt install -y qemu
+                - apt install -y git
+                - export BUILDX_VERSION=$(curl --silent "https://api.github.com/repos/docker/buildx/releases/latest" |jq -r .tag_name)
+                - curl -JLO "https://github.com/docker/buildx/releases/download/$BUILDX_VERSION/buildx-$BUILDX_VERSION.linux-amd64"
+                - mkdir -p ~/.docker/cli-plugins
+                - mv "buildx-$BUILDX_VERSION.linux-amd64" ~/.docker/cli-plugins/docker-buildx
+                - chmod +x ~/.docker/cli-plugins/docker-buildx
+                - docker run --privileged --rm tonistiigi/binfmt --install all
+                - docker buildx create --use
+            build:
+              commands:
+                - git clone https://github.com/k3d-io/k3d.git 
+                - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 960351580303.dkr.ecr.us-east-1.amazonaws.com
+                - echo '{"group":{"default":{"targets":["release"]},"release":{"targets":["binary","dind","proxy","tools"]}},"target":{"binary":{"context":".","dockerfile":"Dockerfile","args":{"DOCKER_META_IMAGES":"960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc","DOCKER_META_VERSION":"main"},"labels":{"org.opencontainers.image.created":"2023-06-07T13:24:00.275Z","org.opencontainers.image.description":"Little helper to run CNCFs k3s in Docker","org.opencontainers.image.licenses":"MIT","org.opencontainers.image.revision":"34e5a4cf9f2c6103f3dd3f99005580c5713257d4","org.opencontainers.image.source":"https://github.com/k3d-io/k3d","org.opencontainers.image.title":"k3d","org.opencontainers.image.url":"https://github.com/k3d-io/k3d","org.opencontainers.image.version":"main"},"tags":["960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:main","960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:sha-34e5a4c"],"target":"binary-only","platforms":["linux/amd64","linux/arm64","linux/arm/v7"]},"dind":{"context":".","dockerfile":"Dockerfile","args":{"DOCKER_META_IMAGES":"960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc","DOCKER_META_VERSION":"main-dind"},"labels":{"org.opencontainers.image.created":"2023-06-07T13:24:00.760Z","org.opencontainers.image.description":"Little helper to run CNCFs k3s in Docker","org.opencontainers.image.licenses":"MIT","org.opencontainers.image.revision":"34e5a4cf9f2c6103f3dd3f99005580c5713257d4","org.opencontainers.image.source":"https://github.com/k3d-io/k3d","org.opencontainers.image.title":"k3d","org.opencontainers.image.url":"https://github.com/k3d-io/k3d","org.opencontainers.image.version":"main-dind"},"tags":["960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:main-dind","960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:sha-34e5a4c-dind"],"target":"dind","platforms":["linux/amd64","linux/arm64"]},"proxy":{"context":"proxy","dockerfile":"Dockerfile","args":{"DOCKER_META_IMAGES":"960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc","DOCKER_META_VERSION":"main"},"labels":{"org.opencontainers.image.created":"2023-06-07T13:24:01.363Z","org.opencontainers.image.description":"Little helper to run CNCFs k3s in Docker","org.opencontainers.image.licenses":"MIT","org.opencontainers.image.revision":"34e5a4cf9f2c6103f3dd3f99005580c5713257d4","org.opencontainers.image.source":"https://github.com/k3d-io/k3d","org.opencontainers.image.title":"k3d","org.opencontainers.image.url":"https://github.com/k3d-io/k3d","org.opencontainers.image.version":"main"},"tags":["960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:proxy-main","960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:proxy-sha-34e5a4c"],"platforms":["linux/amd64","linux/arm64","linux/arm/v7"]},"tools":{"context":"tools","dockerfile":"Dockerfile","args":{"DOCKER_META_IMAGES":"960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc","DOCKER_META_VERSION":"main"},"labels":{"org.opencontainers.image.created":"2023-06-07T13:24:01.891Z","org.opencontainers.image.description":"Little helper to run CNCFs k3s in Docker","org.opencontainers.image.licenses":"MIT","org.opencontainers.image.revision":"34e5a4cf9f2c6103f3dd3f99005580c5713257d4","org.opencontainers.image.source":"https://github.com/k3d-io/k3d","org.opencontainers.image.title":"k3d","org.opencontainers.image.url":"https://github.com/k3d-io/k3d","org.opencontainers.image.version":"main"},"tags":["960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:tools-main","960351580303.dkr.ecr.us-east-1.amazonaws.com/jfrog-poc:tools-sha-34e5a4c"],"platforms":["linux/amd64","linux/arm64","linux/arm/v7"]}}}'  > k3d/bake-metadata.json
+                - cd k3d 
+                - export GOPATH=$HOME/go && export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+                - docker buildx bake -f docker-bake.hcl -f bake-metadata.json release --push
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildServiceRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ecr:*
+                  - s3:*
+                  - codebuild:*
+                Resource: "*"
+
+Outputs:
+  CodeBuildProjectArn:
+    Description: ARN of the AWS CodeBuild project
+    Value: !Ref MyCodeBuildProject
